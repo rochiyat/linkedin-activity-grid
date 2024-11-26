@@ -1,16 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import moment from 'moment';
 
 const Home: React.FC = () => {
-  let activity: any[] = [];
-  let grid: (Date | null)[][] = Array(7).fill(Array(52).fill(null));
-  let startDate: null | Date = null;
+  interface DataItem {
+    Date: string;
+  }
+  const defaultGrid: (Date | null)[][] = Array(7).fill(Array(52).fill(null));
+
+  const [grid, setGrid] = useState<(Date | null)[][]>(defaultGrid);
+  const [startDate, setStartDate] = useState<Date | null>(null);
 
   function getMonthName(month: number) {
     if (month > 11) {
       month = month % 12;
     }
-    console.log('month', month);
     const monthNames = [
       'Jan',
       'Feb',
@@ -33,29 +36,24 @@ const Home: React.FC = () => {
     return dayNames[day];
   }
 
-  function generateDateGrid(dataDates: any[]) {
-    const startDate = moment(dataDates[0], 'DD/MM/YYYY').toDate();
-    console.log('startDate', startDate);
+  function generateDateGrid(dataDates: string[]) {
     const grid = [];
 
     for (let i = 0; i < 7; i++) {
       const days = [];
-      const currentDate = startDate;
-      console.log('currentDate', currentDate);
-      currentDate.setDate(currentDate.getDate() + i);
+      const currentDate = moment(dataDates[0], 'DD/MM/YYYY');
+      currentDate.add(i, 'day');
 
       for (let j = 0; j < 52; j++) {
-        console.log('currentDate', moment(currentDate).format('DD/MM/YYYY'));
         if (dataDates.includes(moment(currentDate).format('DD/MM/YYYY'))) {
-          days.push(currentDate);
+          days.push(moment(currentDate).toDate());
         } else {
           days.push(null);
         }
-        currentDate.setDate(currentDate.getDate() + 7); // Move to next week
+        currentDate.add(7, 'day'); // Move to next week
       }
       grid.push(days);
     }
-
     return grid;
   }
 
@@ -68,27 +66,16 @@ const Home: React.FC = () => {
         if (data.error) {
           throw new Error(data.error);
         }
-        console.log('data', data);
-        const dataDates = data.map((item: any) => {
-          console.log('item', item.Date);
+
+        const dataDates = data.map((item: DataItem) => {
           return item.Date;
         });
-        // console.log('dataDates', dataDates);
 
-        grid = generateDateGrid(dataDates);
-        startDate = grid[0][0];
-        activity = data;
-        console.log('activity', activity);
-        console.log('startDate', startDate);
+        const newGrid = generateDateGrid(dataDates);
+        setGrid(newGrid);
+        setStartDate(newGrid[0][0]);
       });
   }, []);
-
-  function getBackgroundColor(contributions: boolean) {
-    // Fungsi untuk menentukan warna berdasarkan jumlah kontribusi
-    // Misalnya, menggunakan skala warna hijau
-    if (contributions) return '#33cc33'; // Hijau tua
-    return '#99cc99'; // Hijau muda
-  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
@@ -124,11 +111,13 @@ const Home: React.FC = () => {
                 </td>
                 {days.map((week, weekIdx) => (
                   <td key={weekIdx}>
-                    <div
-                      className={`w-2.5 h-2.5 rounded-sm ${
-                        week !== null ? 'bg-green-500' : 'bg-slate-700'
-                      }`}
-                    ></div>
+                    <div className="relative">
+                      <div
+                        className={`w-2.5 h-2.5 rounded-sm ${
+                          week !== null ? 'bg-green-500' : 'bg-slate-500'
+                        }`}
+                      ></div>
+                    </div>
                   </td>
                 ))}
               </tr>
