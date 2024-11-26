@@ -4,10 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "lint": "next lint",
-    "build": "react-scripts build",
-    "start": "serve -s build",
-    "deploy": "vercel --prod"
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
     "@nextui-org/tooltip": "^2.0.41",
